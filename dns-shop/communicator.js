@@ -64,6 +64,7 @@
             category = /-product/i.test(el.dataset.role) ? 'products' : 'configs';
       if (!uuid) continue;
       insertItemsHtml(el, { [category]: [uuid] }, 'afterEnd');
+      el.remove();
     }
     return parentEl;
   }
