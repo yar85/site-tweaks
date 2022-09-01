@@ -1,0 +1,1 @@
+javascript:((d,n,s)=>{(s=d.createElement('script')).src=n;s.className='ysts';d.head.appendChild(s);})(document,'https://cdn.jsdelivr.net/gh/yar85/site-tweaks/dns-shop/communicator.js')
