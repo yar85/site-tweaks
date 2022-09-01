@@ -23,7 +23,7 @@
   }
   
   function cleanup(parentEl=$d.body) {
-    for (const el of parentEl.querySelectorAll('.c-items-container, script.ysts'))
+    for (const el of parentEl.querySelectorAll('.c-items-container, script.ysts:not(:last-child)'))
       el.remove();
   }
   function processTopic() {
