@@ -1,1 +1,1 @@
-javascript:((d,n,s)=>{(s=d.createElement('script')).src=n;s.className='ysts';d.body.appendChild(s);})(document,'https://cdn.jsdelivr.net/gh/yar85/site-tweaks@master/dns-shop/communicator.min.js')
+javascript:((d,n,s)=>{(s=d.createElement('script')).src=n;s.className='ysts';d.body.appendChild(s);})(document,'https://cdn.jsdelivr.net/gh/yar85/site-tweaks@0784383/dns-shop/communicator.min.js')
