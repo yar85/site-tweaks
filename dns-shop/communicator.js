@@ -28,9 +28,13 @@
   }
   function processTopic() {
     if ($.first('.theme-page__theme + .mentioned-products .mentioned-products__item')) return;
-    const { description='', products=[] } = (window.__NUXT__?.state.communicatorStore?.themeData ?? {}),
-          configs = description.match(/(?<=\[rsu\])[^[]+/gi) ?? [];
-    const configsCntnrEl = insertItemsHtml($.first('.theme-page__theme'), { configs }, 'afterEnd');
+    const { description='', products=[] } = (
+    	window.__NUXT__?.state.communicatorStore?.themeData
+    	?? window.__NUXT__?.pinia.communicator?.themeData
+    	?? {}
+    );
+    const configs = (description.match(/(?<=\[rsu\])[^[]+/gi) ?? []),
+	    		configsCntnrEl = insertItemsHtml($.first('.theme-page__theme'), { configs }, 'afterEnd');
     configsCntnrEl?.insertAdjacentHTML('afterEnd', `
       <div class="c-items-container mentioned-products theme-page__mentioned-products">
         <ul class="mentioned-products__list" style="margin: 0; gap: 0 3rem;">${
