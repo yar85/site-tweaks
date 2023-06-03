@@ -81,7 +81,7 @@
           <a class="btn_simple-white is-product" href="//www.dns-shop.ru/${(uuid.length < 10) ? 'search/?q=' : 'product/'}${uuid}" target="_blank" title="${uuid}" style="margin: 0 0.5em 1em;">Товар${!i ? '' : ` ${i + 1}`}</a>
         `).join('')}
         ${configs.map((uuid, i) => `
-          <a class="btn_simple-white is-config" href="//www.dns-shop.ru/custompc/user-pc/configuration/${uuid}" target="_blank" title="${uuid}" style="margin: 0 0.5em 1em;">Сборка${!i ? '' : ` ${i + 1}`}</a>
+          <a class="btn_simple-white is-config" href="//www.dns-shop.ru/conf/${uuid}" target="_blank" title="${uuid}" style="margin: 0 0.5em 1em;">Сборка${!i ? '' : ` ${i + 1}`}</a>
         `).join('')}
       </div>
     `);
