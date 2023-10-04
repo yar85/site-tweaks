@@ -29,8 +29,8 @@
   function processTopic() {
     if ($.first('.theme-page__theme + .mentioned-products .mentioned-products__item')) return;
     const { description='', products=[] } = (
-    	window.__NUXT__?.state.communicatorStore?.themeData
-    	?? window.__NUXT__?.pinia.communicator?.themeData
+    	window.__NUXT__?.state?.communicatorStore?.themeData
+    	?? window.__NUXT__?.pinia?.communicator?.themeData
     	?? {}
     );
     const configs = (description.match(/(?<=\[rsu\])[^[]+/gi) ?? []),
