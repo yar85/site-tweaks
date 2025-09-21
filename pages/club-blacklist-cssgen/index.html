@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <title>Генератор стилей для ЧС в Клубе</title>
+  <style>
+    @keyframes btn-press {
+      0%   { box-shadow: 0 0.3rem 0.8rem #0003; }
+      33%  { box-shadow: 0 0 2px #0006; }
+      67%  { box-shadow: 0 0 2px #0006; }
+      100% { box-shadow: 0 0.3rem 0.8rem #0003; }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, .container { height: 100%; }
+    body { min-width: 320px; padding: 1rem; box-sizing: border-box; font-family: Arial, sans-serif; }
+    .container { display: flex; flex-direction: column; gap: 1rem; width: 100%; max-width: 75rem; margin: auto; }
+
+    textarea,
+    .is-text-container { padding: 0.25rem 0.5rem; }
+
+    .r-row {
+      display: flex; flex-direction: row; gap: 1rem;
+
+      &.has-no-gap    { gap: 0; }
+      &.has-wrap      { flex-wrap: wrap; }
+      &.is-centered   { justify-content: center; align-items: center; }
+      &.is-w-centered { justify-content: center; }
+      &.is-h-centered { align-items: center; }
+    }
+
+    .o-btn {
+      display: flex;
+      justify-content: center; align-items: center;
+      background: #fff;
+      box-shadow: 0 0.3rem 0.8rem #0003;
+      cursor: pointer;
+
+      &.is-clicked { animation: btn-press 0.5s ease-out forwards; }
+
+      &.r-copy {
+        position: absolute;
+        top: 1rem; right: 2rem;
+        width: 1.75em; height: 1.75em;
+        font: 2rem/1 monospace;
+        text-align: center;
+        border-radius: 0.25em;
+
+        &::before,
+        &::after {
+          content: '📄';
+          position: absolute;
+          top: calc(50% - 0.15em); left: 0.2em; right: 0;
+          transform: translateY(-50%);
+          display: block;
+        }
+
+        &::before { transform: translate(-0.2em, calc(-50% + 0.2em)); opacity: 0.75; }
+      }
+    }
+
+    .c-heading { color: #777; }
+
+    .c-dropzone,
+    .c-users-list,
+    .c-users-list textarea,
+    .c-output-css { border-radius: 0.5rem; overflow: hidden; }
+
+    .c-dropzone {
+      flex: 10 1 auto;
+      display: flex;
+      justify-content: center; align-items: center;
+      min-width: 270px;
+      padding: 2rem;
+      border: 4px dashed #0744;
+      font-size: 1.6rem;
+      text-align: center;
+      color: #042a;
+      background-color: #0740;
+      transition: background-color 0.5s ease;
+      user-select: none;
+
+      &.is-active { background-color: #0741; }
+    }
+
+    .c-users-list {
+      flex: 1 0 270px;
+      height: 15rem;
+      padding: 0.7rem;
+      overflow-x: auto; overflow-y: scroll;
+      outline: 1px solid #ccc;
+
+      .o-item {
+        justify-content: flex-start;
+        gap: 0.5em;
+        padding: 0.1em 0;
+        cursor: default;
+
+        .o-btn.r-delete { width: 1rem; height: 1rem; font-size: 0.5rem; box-shadow: none; visibility: hidden; }
+
+        &:hover .o-btn.r-delete { visibility: visible; }
+      }
+    }
+
+    .c-output-css {
+      flex: 2;
+      position: relative;
+      box-sizing: border-box;
+      font-family: monospace;
+      background-color: #7772;
+
+      pre { width: 100%; height: 100%; box-sizing: border-box; overflow-y: scroll; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h2 class="c-heading">Генератор стилей для ЧС в Клубе</h2>
+    <div class="r-row has-wrap">
+      <div class="c-dropzone">Перетащите&nbsp;ссылки на&nbsp;профили<br>пользователей&nbsp;сюда</div>
+      <div class="c-users-list"></div>
+    </div>
+    <div class="c-output-css">
+      <pre class="is-text-container"><code>lalala</code></pre>
+      <div class="o-btn r-copy"></div>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {                       // btns
+      const onClick   = evt => evt.currentTarget.classList.add('is-clicked'),
+            onAnimEnd = evt => evt.currentTarget.classList.remove('is-clicked');
+      for (const btn of document.querySelectorAll('.o-btn')) {
+        btn.addEventListener('click', onClick);
+        btn.addEventListener('animationend', onAnimEnd);
+      }
+    }, { once: true });
+
+    document.addEventListener('DOMContentLoaded', () => {                       // main
+      const userProfileHtmlRe = /href="[^"]*\/authors\/([^-]+)-([^/]+).*".*>([^</]+)(?:\s*<\/[a-z]+>\s*)*$/i,
+            userProfileUrlRe  = /\/authors\/([^-]+)-([^/]+)/i,
+            userInfoUrl       = uid => `https://club.dns-shop.ru/api/v1/author-page/getProfile/${uid}/`,
+            userTpl           = document.querySelector('.o-template.r-html-user-entry').textContent,
+            stylesTpl         = document.querySelector('.o-template.r-css-rules').textContent.trim().replace(/^\s{4}/gm, '');
+      const inEl    = document.querySelector('.c-dropzone'),
+            listEl  = document.querySelector('.c-users-list'),
+            outEl   = document.querySelector('.c-output-css pre'),
+            users   = new Map();
+      const splitInput = str => str.split(/>\s*[,;]\s*</).map(s => s.trim()).filter(s => s.length > 0);
+      const parseUserIds = userLinks => userLinks
+        .map(u => userProfileHtmlRe.exec(u.trim()) ?? userProfileUrlRe.exec(u.trim())).filter(m => m)
+        .map(m => ({ id: m[1], name: m[2], dispName: m[3]?.trim() }));
+      const fetchUserInfo = uid => fetch(userInfoUrl(uid), { credentials: 'include' }).then(r => r.json());
+      const saveUsers = () => localStorage.setItem('users', JSON.stringify([...users.values()]));
+      const replacePlaceholders = (usr, str) => str
+        .replace(/%USER_DISP_NAME%/g, usr.dispName ?? usr.name).replace(/%USER_NAME%/g, usr.name)
+        .replace(/%USER_ID%/g, usr.id);
+      const rebuildUsersList = () => void (
+        listEl.innerHTML = [...users.values()].map(usr => replacePlaceholders(usr, userTpl)).join('')
+      );
+      const rebuildOutputCSS = () => void (
+        outEl.innerHTML = [...users.values()].map(usr => replacePlaceholders(usr, stylesTpl)).join('\n\n')
+      );
+      const rebuildAll = () => (rebuildUsersList(), rebuildOutputCSS());
+      //
+      users.clear();
+      for (const usr of JSON.parse(localStorage.getItem('users') ?? '[]'))
+        users.set(usr.id, usr);
+      outEl.closest('.c-output-css').querySelector('.o-btn.r-copy').addEventListener('click', () => {
+        navigator.clipboard.writeText(outEl.textContent);
+      });
+      listEl.addEventListener('click', evt => {
+        if (!evt.target.closest('.o-btn.r-delete')) return;
+        if (!users.delete(evt.target.closest('.o-item').dataset.uid)) return;
+        saveUsers();
+        rebuildAll();
+      });
+      inEl.addEventListener('dragover', evt => {
+        evt.preventDefault();
+        evt.currentTarget.classList.add('is-active');
+      });
+      inEl.addEventListener('dragleave', evt => evt.currentTarget.classList.remove('is-active'));
+      inEl.addEventListener('drop', async evt => {
+        evt.preventDefault();
+        // console.log(evt.dataTransfer.types, evt.dataTransfer.getData('text/html'));
+        const data = evt.dataTransfer.getData('text/html') || evt.dataTransfer.getData('text/plain');
+        const newUsers = parseUserIds(splitInput(data));
+        for (const usr of newUsers) {
+          if (users.has(usr.id)) continue;
+          users.set(usr.id, usr);
+        }
+        saveUsers();
+        rebuildAll();
+        evt.currentTarget.classList.remove('is-active');
+      });
+      rebuildAll();
+    }, { once: true });
+  </script>
+
+  <script class="o-template r-html-user-entry" type="text/plain">
+    <div class="o-item r-row is-centered" data-uid="%USER_ID%">
+      <span class="o-btn r-delete">❌</span>
+      <span class="r-name">%USER_DISP_NAME%</span>
+    </div>
+  </script>
+  <script class="o-template r-css-rules" type="text/plain">
+    /* %USER_DISP_NAME% */
+    .post-list-item-container:has(.post-list-item-short__author a[href*="%USER_ID%"]) { display: none; }
+    .flow-post:has(.flow-post__header a[href*="%USER_ID%"]) { display: none; }
+    .comment__author-box:has(a[href*="%USER_ID%"]) + .comment__body > .comment__text {
+      * { display: none; }
+      &::after { content: '<Игнорируется>'; display: block; margin: 0 0 0.5rem; font-style: italic; color: #7777; }
+    }
+  </script>
+</body>
+</html>
